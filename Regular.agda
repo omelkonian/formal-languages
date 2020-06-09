@@ -3,16 +3,47 @@ module Regular where
 
 open import Function using (_∘_; _$_)
 
-open import Data.Empty using (⊥)
-open import Data.Unit using (⊤; tt)
-open import Data.Product using (_×_; _,_)
-open import Data.Char using (Char)
+open import Data.Empty   using (⊥)
+open import Data.Unit    using (⊤; tt)
+open import Data.Product using (_×_; _,_; ∃; ∃-syntax; Σ-syntax; map₁; map₂)
+open import Data.Sum     using (_⊎_; inj₁; inj₂)
+open import Data.Char    using (Char)
   renaming (_≟_ to _≟ᶜ_)
+open import Data.Nat     using (ℕ; suc; _+_)
+open import Data.Fin     using (Fin)
+  renaming (suc to fsuc; zero to fzero)
 
-open import Data.List using (List; []; _∷_; [_]; map; _++_; concat; concatMap; zip)
+open import Data.List using (List; []; _∷_; [_]; map; _++_; concat; concatMap; zip; length)
 open import Data.List.Properties using (≡-dec)
 
+open import Data.List.Relation.Unary.Any
+  using (Any; here; there)
+
+open import Relation.Binary.PropositionalEquality
+  using (_≡_; refl; cong)
+
+open import Prelude.Lists
+
 Type  = Set
+
+private
+  variable
+    A B : Type
+
+splitAt : ∀ (xs : List A) → Fin (suc $ length xs) → List A × List A
+splitAt xs       fzero    = [] , xs
+splitAt (x ∷ xs) (fsuc i) = map₁ (x ∷_) (splitAt xs i)
+
+splitAt′ : ∀ (xs : List A) → Index xs
+  → Σ[ xsˡ ∈ List A ] Σ[ xsʳ ∈ List A ]
+      length xsˡ + length xsʳ ≡ length xs
+splitAt′ (x ∷ xs) fzero    = [ x ] , xs , refl
+splitAt′ (x ∷ xs) (fsuc i) = let xsˡ , xsʳ , p = splitAt′ xs i
+                             in  x ∷ xsˡ , xsʳ , cong suc p
+
+-- repeat : ℕ → List A → List A
+-- repeat 0       _  = []
+-- repeat (suc n) xs = xs ++ repeat n xs
 
 Token : Type
 Token = Char
@@ -28,52 +59,85 @@ Word = List Token
 _ : Word
 _ = [ 'a' ]
 
-ε : Word
-ε = []
+pattern ε = []
+
+data Grammar (Σ : Alphabet) : Type where
+  ∅ : Grammar Σ
+
+  `ε : Grammar Σ
+
+  I : (a : Token) → a SETᶜ.∈′ Σ → Grammar Σ
+
+  _∪_ : Grammar Σ → Grammar Σ → Grammar Σ
+
+  _∙_ : Grammar Σ → Grammar Σ → Grammar Σ
+
+  _⁺ : Grammar Σ → Grammar Σ
+
+private
+  variable
+    Σ : Alphabet
+
+_⋆ : Grammar Σ → Grammar Σ
+g ⋆ = `ε ∪ (g ⁺)
 
 
-data Grammar (Σ : Alphabet) : Language → Type where
-  ∅ :
-    ------------
-    Grammar Σ ∅ℓ
+{-# TERMINATING #-}
+-- T0D0: explain well-founded recursion, apply to `accept`
+-- _≺_ : List A → List A → Set
+-- xs ≺ ys = length xs < length ys
+-- wf : WellFounded _≺_
+accept : Grammar Σ → Word → Type
+accept ∅ _ = ⊥
 
-  `ε :
-    ------------
-    Grammar Σ εℓ
+accept `ε ε = ⊤
+accept `ε _ = ⊥
 
+accept (I a _) xs = xs ≡ [ a ]
 
-  I :
-      (a : Token)
-    → a SETᶜ.∈′ Σ
-      ----------------------------------
-    → Grammar Σ (SETʷ.singleton [ 'a' ])
+accept (g₁ ∪ g₂) xs = accept g₁ xs ⊎ accept g₂ xs
 
-  _∪_ : ∀ {ℓ₁ ℓ₂ : Language}
+accept (g₁ ∙ g₂) xs
+  = Σ[ i ∈ Fin (suc $ length xs) ]
+      let xsˡ , xsʳ = splitAt xs i
+      in accept g₁ xsˡ × accept g₂ xsʳ
 
-    → Grammar Σ ℓ₁
-    → Grammar Σ ℓ₂
-      -----------------------
-    → Grammar Σ (ℓ₁ ∪ℓ ℓ₂)
+accept (g ⁺) xs
+  -- = ∃ λ is → All (accept g) (takeApart is xs)
+  = ∃ λ i → let xsˡ , xsʳ , p = splitAt′ xs i
+            in  accept g xsˡ × accept (g ⁺) xsʳ
+-- n ∈ [1 , ... , len]
+-- NB: infer ys n, kind of easy
 
-  _∙_ : ∀ {ℓ₁ ℓ₂ : Language}
+postulate
+  Σ′ : Alphabet
+  a b : Token
 
-    → Grammar Σ ℓ₁
-    → Grammar Σ ℓ₂
-      --------------------
-    → Grammar Σ (ℓ₁ ∙ℓ ℓ₂)
+  a∈ : a SETᶜ.∈′ Σ′
+  b∈ : b SETᶜ.∈′ Σ′
 
-  _⁺ : ∀ {ℓ}
-    → Grammar Σ ℓ
-      ---------------
-    → Grammar Σ (ℓ ⁺ℓ)
+Gᵃ : Grammar Σ′
+Gᵃ = I a a∈
 
--- _⋆ : ∀ {Σ ℓ}
---   → Grammar Σ ℓ
---     --------------------
---   → Grammar Σ ((ℓ ⁺ℓ) ∪ℓ εℓ)
--- g ⋆ = `ε ∪ (g ⁺)
+Gᵇ : Grammar Σ′
+Gᵇ = I b b∈
 
+G′ : Grammar Σ′
+G′ = (Gᵃ ∪ Gᵇ) ∙ `ε
 
+G″ : Grammar Σ′
+G″ = G′ ⋆
+
+-- _ : accept Gᵃ (a ∷ [])
+-- _ = refl
+
+-- _ : accept G′ [ b ]
+-- _ = fsuc fzero , inj₂ refl , tt
+
+-- _ : accept G″ ('a' ∷ 'b' ∷ 'a' ∷ 'b' ∷ 'b' ∷ [])
+-- _ = [0,5,7,14] , [ ? , ? , ? , ? ]
+
+{-
 module SETʷ = SET {A = Word} (≡-dec _≟ᶜ_)
 Language = Set' where open SETʷ
 
@@ -101,7 +165,7 @@ _⁺ℓ : Language → Language
 
 _∪ℓ_ : Language → Language → Language
 _∪ℓ_ = SETʷ._∪_
-
+-}
 
 -- postulate
 --   weakening : ∀ {Σ' Σ ℓ} → Grammar Σ' ℓ → Σ' SETᶜ.⊆ Σ → Grammar Σ ℓ
