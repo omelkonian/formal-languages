@@ -37,6 +37,9 @@ record FSA (S : Type) {{_ : DecEq S}} : Type where
   δ̂ : Word → Maybe S
   δ̂ = (L.NE.head <$>_) ∘ Δ q₀
 
+  isFinal : S → Type
+  isFinal = _∈′ fs
+
 open FSA public
 
 -- Example FSA
@@ -47,18 +50,26 @@ open FSA public
 ∁ record {Q = Q; δ = δ; Q₀ = Q₀; F = (F , F⊆)} =
   record {Q = Q; δ = δ; Q₀ = Q₀; F = (Q ─ F , ∈-─ {xs = Q} {ys = F})}
 
+{-
+data Accept : FSA S → Word → Type where
+  [δ] : ∀ {w s fsa} → δ̂ fsa w ≡ just s → s ∈′ fs fsa → Accept fsa w
+-}
+
+
 instance
   L-FSA : ∀ {S} {{_ : DecEq S}} → Language (FSA S)
-  L-FSA .accept fsa w = ∃ λ s → (δ̂ fsa w ≡ just s) × (s ∈′ fs fsa)
+  L-FSA .accept fsa w = ∃ λ s → (δ̂ fsa w ≡ just s) × (isFinal fsa s)
 
 -- To/from Regex
 open import Regular Σ
 
 DFA⇒Regex : ∀ {S} {{_ : DecEq S}} → (fsa : FSA S) → Σ[ r ∈ Regex ] (fsa ~ r)
 -- fsa → ∃ r. fsa ~ r
-DFA⇒Regex {S = S} record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , _ ; F = ⟨ F ⟩∶- _ , _ } =
-  r , {!!}
+DFA⇒Regex {S = S} fsa@(record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , _ ; F = ⟨ F ⟩∶- _ , _ }) =
+  r , fsa~r
   where
+    -- R _ i j ~ (fsa // i↝j)
+    -- R _ i j ~ δ̂
     R : List S → S → S → Regex
     -- Rᵢⱼ⁰
     -- ^ k = 0 (all states > 1)
@@ -71,8 +82,34 @@ DFA⇒Regex {S = S} record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , _ ; F
     R (k ∷ q) i j =
       R q i j `∪ (R q i k ∙ R q k k ⋆ ∙ R q k j)
 
+    -- R-δ̂ : accept fsa w ⇔ accept R(q₀,f) w
+
+    {-
+    H: accept fsa w
+     ⇒⟨ def ⟩ ∃ f. → (δ̂ fsa w ≡ just f) × (isFinal fsa f)  -- there is a path Q₀↝f
+     ⇒⟨ R-δ̂ ⟩ accept (R _ Q₀ f) w                          -- R(q₀,f) accepts w
+     ⇒⟨ ⋃-pick ⟩ accept r w                                -- ⋃ R(q₀,_) accepts w
+    -}
+
+    -- [⋃] : w ∈ ⋃ rs ⇒ ∃ rᵢ ∈ rs. w ∈ rᵢ
+
+    -- rᵢ ≈ R(q₀, fᵢ) × w ∈ rᵢ
+    -- ≈ accept rᵢ w
+    -- ⇒⟨ R-δ̂ ⟩ accept fsa w
+
     r : Regex
     r = ⋃ (R Q Q₀ <$> F)
+      -- R _ Q₀ f ≈ (δ̂ w ≡ just f)
+      -- r ~ fsa ∼ ⋃ (fsa // i↝j)
+
+    fsa~r : fsa ~ r
+    fsa~r w = p₁ , p₂
+      where
+        p₁ : accept fsa w → accept r w
+        p₁ (f , δ̂≡ , ff) = {!⋃-pick (R-δ̂ f ff)!}
+
+        p₂ : accept r w → accept fsa w
+        p₂ w∈r = {! let rᵢ , w∈rᵢ = [⋃] w∈r in R-δ̂ ? !}
 
 -- _ : proj₁ (DFA⇒Regex fsa)
 

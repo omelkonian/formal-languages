@@ -2,8 +2,10 @@ module Examples where
 
 open import Prelude.Init
 open import Prelude.Set'
-open import Prelude.Lists
 open import Prelude.DecEq
+open import Prelude.Applicative
+open import Prelude.Semigroup
+open import Prelude.Nary
 open import Language
 
 module Regex-Example where
@@ -22,40 +24,10 @@ module Regex-Example where
          ) ⋆
 
   _ : accept Bin3 ⟦ '0' , '0' , '1' , '1' , '0' ⟧
-  _ = -- 00110 ∈ G⋆
-      inj₂
-      -- 00110 ∈ G⁺
-      ⟦ # 0 ⇒ˡ -- 0 ∈ G
-               inj₁ refl
-            ⇒ʳ -- 0110 ∈ G⋆
-               inj₂
-               -- 0110 ∈ G⁺
-               ⟦ # 0 ⇒ˡ -- 0 ∈ G
-                        inj₁ refl
-                     ⇒ʳ -- 110 ∈ G⋆
-                        inj₂
-                        -- 110 ∈ G⁺
-                        ⟦ # 1 ⇒ˡ -- 11 ∈ G
-                                 inj₂ ⟦ # 1 ⇒ˡ -- 1 ∈ G¹
-                                               refl
-                                            ⇒ʳ -- 1 ∈ (⋯)⋆1
-                                               ⟦ # 0 ⇒ˡ -- ε ∈ (⋯)⋆
-                                                        inj₁ refl
-                                                     ⇒ʳ -- 1 ∈ G¹
-                                                        refl ⟧
-                                      ⟧
-                              ⇒ʳ -- 0 ∈ G⋆
-                                 inj₂
-                                 -- 0 ∈ G⁺
-                                 ⟦ # 0 ⇒ˡ -- 0 ∈ G
-                                          inj₁ refl
-                                       ⇒ʳ -- ε ∈ G⋆
-                                          inj₁ refl
-                                 ⟧
-
-                        ⟧
-               ⟧
-      ⟧
+  _ = [∪ʳ] ([⁺] ([∪ˡ] [I])
+                ([∪ʳ] ([⁺] ([∪ˡ] [I])
+                           ([∪ʳ] ([⁺] ([∪ʳ] ([∙] [I] ([∙] ([∪ˡ] [ε]) [I])))
+                                      ([∪ʳ] ([⁺] ([∪ˡ] [I]) ([∪ˡ] [ε]))))))))
 
 module FSA-Example where
   open import Regular (singleton 'a')
