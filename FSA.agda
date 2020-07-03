@@ -4,7 +4,7 @@ open import Language
 open import Data.Fin using (inject₁)
 open import Data.List.Membership.Propositional.Properties
 
-open import Prelude.Init
+open import Prelude.Init hiding (_⇔_)
 open import Prelude.Lists
 open import Prelude.DecEq
 open import Prelude.Functor
@@ -63,6 +63,13 @@ instance
 -- To/from Regex
 open import Regular Σ
 
+-- Regex properties
+⋃-intro : ∀ {w rs r} → r ∈ rs → accept r w → accept (⋃ rs) w
+⋃-intro = {!!}
+
+⋃-elim : ∀ {w rs} → accept (⋃ rs) w → ∃ λ r → (r ∈ rs) × (accept r w)
+⋃-elim = {!!}
+
 DFA⇒Regex : ∀ {S} {{_ : DecEq S}} → (fsa : FSA S) → Σ[ r ∈ Regex ] (fsa ~ r)
 -- fsa → ∃ r. fsa ~ r
 DFA⇒Regex {S = S} fsa@(record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , _ ; F = ⟨ F ⟩∶- _ , _ }) =
@@ -82,20 +89,16 @@ DFA⇒Regex {S = S} fsa@(record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , 
     R (k ∷ q) i j =
       R q i j `∪ (R q i k ∙ R q k k ⋆ ∙ R q k j)
 
-    -- R-δ̂ : accept fsa w ⇔ accept R(q₀,f) w
+    R′ : (Q : List S) → (i : S) → (j : S)
+       → Σ[ r ∈ Regex ]
+           (accept r ⇔ (M.Any.Any ((_⊆ Q) ∘ L.NE.toList) ∘ Δ fsa i))
+    R′ = {!!}
 
-    {-
-    H: accept fsa w
-     ⇒⟨ def ⟩ ∃ f. → (δ̂ fsa w ≡ just f) × (isFinal fsa f)  -- there is a path Q₀↝f
-     ⇒⟨ R-δ̂ ⟩ accept (R _ Q₀ f) w                          -- R(q₀,f) accepts w
-     ⇒⟨ ⋃-pick ⟩ accept r w                                -- ⋃ R(q₀,_) accepts w
-    -}
+    R-δ̂ : ∀ {w f} → f ∈ F → accept fsa w → accept (R Q Q₀ f) w
+    R-δ̂ f∈ w∈ = {!!}
 
-    -- [⋃] : w ∈ ⋃ rs ⇒ ∃ rᵢ ∈ rs. w ∈ rᵢ
-
-    -- rᵢ ≈ R(q₀, fᵢ) × w ∈ rᵢ
-    -- ≈ accept rᵢ w
-    -- ⇒⟨ R-δ̂ ⟩ accept fsa w
+    R-δ̂′ : ∀ {w f} → f ∈ F → accept (R Q Q₀ f) w → accept fsa w
+    R-δ̂′ = {!!}
 
     r : Regex
     r = ⋃ (R Q Q₀ <$> F)
@@ -106,10 +109,12 @@ DFA⇒Regex {S = S} fsa@(record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , 
     fsa~r w = p₁ , p₂
       where
         p₁ : accept fsa w → accept r w
-        p₁ (f , δ̂≡ , ff) = {!⋃-pick (R-δ̂ f ff)!}
+        p₁ w∈@(_ , _ , f∈) = ⋃-intro (∈-map⁺ (R Q Q₀) f∈) (R-δ̂ f∈ w∈)
 
         p₂ : accept r w → accept fsa w
-        p₂ w∈r = {! let rᵢ , w∈rᵢ = [⋃] w∈r in R-δ̂ ? !}
+        p₂ w∈rs = let r , r∈ , w∈r = ⋃-elim w∈rs
+                      f , f∈ , r≡  = ∈-map⁻ (R Q Q₀) r∈
+                  in  R-δ̂′ {f = f} f∈ (subst (flip accept w) r≡ w∈r)
 
 -- _ : proj₁ (DFA⇒Regex fsa)
 
