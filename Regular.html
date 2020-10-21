@@ -1,0 +1,120 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="utf-8"><title>Regular</title><link rel="stylesheet" href="css/Agda.css"></head><body><pre class="Agda"><a id="1" class="Keyword">open</a> <a id="6" class="Keyword">import</a> <a id="13" href="Induction.WellFounded.html" class="Module">Induction.WellFounded</a>
+<a id="35" class="Keyword">open</a> <a id="40" class="Keyword">import</a> <a id="47" href="Data.Nat.Induction.html" class="Module">Data.Nat.Induction</a> <a id="66" class="Keyword">using</a> <a id="72" class="Symbol">(</a><a id="73" href="Data.Nat.Induction.html#2262" class="Function">&lt;-wellFounded</a><a id="86" class="Symbol">)</a>
+<a id="88" class="Keyword">open</a> <a id="93" class="Keyword">import</a> <a id="100" href="Data.Nat.Properties.html" class="Module">Data.Nat.Properties</a>
+
+<a id="121" class="Keyword">open</a> <a id="126" class="Keyword">import</a> <a id="133" href="Prelude.Init.html" class="Module">Prelude.Init</a>
+<a id="146" class="Keyword">open</a> <a id="151" class="Keyword">import</a> <a id="158" href="Prelude.Lists.html" class="Module">Prelude.Lists</a>
+<a id="172" class="Keyword">open</a> <a id="177" class="Keyword">import</a> <a id="184" href="Prelude.DecEq.html" class="Module">Prelude.DecEq</a>
+<a id="198" class="Keyword">open</a> <a id="203" class="Keyword">import</a> <a id="210" href="Prelude.Set%2527.html" class="Module">Prelude.Set&#39;</a>
+<a id="223" class="Keyword">open</a> <a id="228" class="Keyword">import</a> <a id="235" href="Prelude.Bifunctor.html" class="Module">Prelude.Bifunctor</a>
+<a id="253" class="Keyword">open</a> <a id="258" class="Keyword">import</a> <a id="265" href="Prelude.Applicative.html" class="Module">Prelude.Applicative</a>
+<a id="285" class="Keyword">open</a> <a id="290" class="Keyword">import</a> <a id="297" href="Prelude.Semigroup.html" class="Module">Prelude.Semigroup</a>
+<a id="315" class="Keyword">open</a> <a id="320" class="Keyword">import</a> <a id="327" href="Prelude.Nary.html" class="Module">Prelude.Nary</a>
+
+<a id="341" class="Keyword">open</a> <a id="346" class="Keyword">import</a> <a id="353" href="Language.html" class="Module">Language</a>
+
+<a id="363" class="Keyword">module</a> <a id="370" href="Regular.html" class="Module">Regular</a> <a id="378" class="Symbol">(</a><a id="379" href="Regular.html#379" class="Bound">Σ</a> <a id="381" class="Symbol">:</a> <a id="383" href="Language.html#191" class="Function">Alphabet</a><a id="391" class="Symbol">)</a> <a id="393" class="Keyword">where</a>
+
+<a id="400" class="Keyword">data</a> <a id="Regex"></a><a id="405" href="Regular.html#405" class="Datatype">Regex</a> <a id="411" class="Symbol">:</a> <a id="413" href="Language.html#114" class="Function">Type</a> <a id="418" class="Keyword">where</a>
+  <a id="Regex.`∅"></a><a id="426" href="Regular.html#426" class="InductiveConstructor">`∅</a> <a id="429" class="Symbol">:</a> <a id="431" href="Regular.html#405" class="Datatype">Regex</a>
+
+  <a id="Regex.`ε"></a><a id="440" href="Regular.html#440" class="InductiveConstructor">`ε</a> <a id="443" class="Symbol">:</a> <a id="445" href="Regular.html#405" class="Datatype">Regex</a>
+
+  <a id="Regex.I"></a><a id="454" href="Regular.html#454" class="InductiveConstructor">I</a> <a id="456" class="Symbol">:</a> <a id="458" class="Symbol">(</a><a id="459" href="Regular.html#459" class="Bound">a</a> <a id="461" class="Symbol">:</a> <a id="463" href="Language.html#164" class="Function">Token</a><a id="468" class="Symbol">)</a> <a id="470" class="Symbol">→</a> <a id="472" href="Regular.html#459" class="Bound">a</a> <a id="474" href="Prelude.Set%2527.html#1072" class="Function Operator">∈′</a> <a id="477" href="Regular.html#379" class="Bound">Σ</a> <a id="479" class="Symbol">→</a> <a id="481" href="Regular.html#405" class="Datatype">Regex</a>
+
+  <a id="Regex._`∪_"></a><a id="490" href="Regular.html#490" class="InductiveConstructor Operator">_`∪_</a> <a id="495" class="Symbol">:</a> <a id="497" href="Regular.html#405" class="Datatype">Regex</a> <a id="503" class="Symbol">→</a> <a id="505" href="Regular.html#405" class="Datatype">Regex</a> <a id="511" class="Symbol">→</a> <a id="513" href="Regular.html#405" class="Datatype">Regex</a>
+
+  <a id="Regex._∙_"></a><a id="522" href="Regular.html#522" class="InductiveConstructor Operator">_∙_</a> <a id="526" class="Symbol">:</a> <a id="528" href="Regular.html#405" class="Datatype">Regex</a> <a id="534" class="Symbol">→</a> <a id="536" href="Regular.html#405" class="Datatype">Regex</a> <a id="542" class="Symbol">→</a> <a id="544" href="Regular.html#405" class="Datatype">Regex</a>
+
+  <a id="Regex._⁺"></a><a id="553" href="Regular.html#553" class="InductiveConstructor Operator">_⁺</a> <a id="556" class="Symbol">:</a> <a id="558" href="Regular.html#405" class="Datatype">Regex</a> <a id="564" class="Symbol">→</a> <a id="566" href="Regular.html#405" class="Datatype">Regex</a>
+
+  <a id="575" class="Comment">{- _⋆ : Regex → Regex -}</a>
+
+<a id="`⋃_"></a><a id="601" href="Regular.html#601" class="Function Operator">`⋃_</a> <a id="605" class="Symbol">:</a> <a id="607" href="Agda.Builtin.List.html#148" class="Datatype">List</a> <a id="612" href="Regular.html#405" class="Datatype">Regex</a> <a id="618" class="Symbol">→</a> <a id="620" href="Regular.html#405" class="Datatype">Regex</a>
+<a id="626" href="Regular.html#601" class="Function Operator">`⋃_</a> <a id="630" class="Symbol">=</a> <a id="632" href="Data.List.Base.html#3625" class="Function">foldr</a> <a id="638" href="Regular.html#490" class="InductiveConstructor Operator">_`∪_</a> <a id="643" href="Regular.html#426" class="InductiveConstructor">`∅</a>
+
+<a id="∀Σ"></a><a id="647" href="Regular.html#647" class="Function">∀Σ</a> <a id="650" class="Symbol">:</a> <a id="652" href="Regular.html#405" class="Datatype">Regex</a>
+<a id="658" href="Regular.html#647" class="Function">∀Σ</a> <a id="661" class="Symbol">=</a> <a id="663" href="Regular.html#601" class="Function Operator">`⋃</a> <a id="666" href="Data.List.Membership.Setoid.html#1123" class="Function">mapWith∈</a> <a id="675" class="Symbol">(</a><a id="676" href="Prelude.Set%2527.html#985" class="Field">list</a> <a id="681" href="Regular.html#379" class="Bound">Σ</a><a id="682" class="Symbol">)</a> <a id="684" class="Symbol">(</a><a id="685" href="Regular.html#454" class="InductiveConstructor">I</a> <a id="687" class="Symbol">_)</a>
+
+<a id="len"></a><a id="691" href="Regular.html#691" class="Function">len</a> <a id="695" class="Symbol">:</a> <a id="697" href="Agda.Builtin.Nat.html#192" class="Datatype">ℕ</a> <a id="699" class="Symbol">→</a> <a id="701" href="Regular.html#405" class="Datatype">Regex</a>
+<a id="707" href="Regular.html#691" class="Function">len</a> <a id="711" class="Number">0</a> <a id="713" class="Symbol">=</a> <a id="715" href="Regular.html#440" class="InductiveConstructor">`ε</a>
+<a id="718" href="Regular.html#691" class="Function">len</a> <a id="722" class="Symbol">(</a><a id="723" href="Agda.Builtin.Nat.html#223" class="InductiveConstructor">suc</a> <a id="727" href="Regular.html#727" class="Bound">n</a><a id="728" class="Symbol">)</a> <a id="730" class="Symbol">=</a> <a id="732" href="Regular.html#691" class="Function">len</a> <a id="736" href="Regular.html#727" class="Bound">n</a> <a id="738" href="Regular.html#522" class="InductiveConstructor Operator">∙</a> <a id="740" href="Regular.html#647" class="Function">∀Σ</a>
+
+<a id="_⁇"></a><a id="744" href="Regular.html#744" class="Function Operator">_⁇</a> <a id="747" class="Symbol">:</a> <a id="749" href="Regular.html#405" class="Datatype">Regex</a> <a id="755" class="Symbol">→</a> <a id="757" href="Regular.html#405" class="Datatype">Regex</a>
+<a id="763" href="Regular.html#763" class="Bound">g</a> <a id="765" href="Regular.html#744" class="Function Operator">⁇</a> <a id="767" class="Symbol">=</a> <a id="769" href="Regular.html#440" class="InductiveConstructor">`ε</a> <a id="772" href="Regular.html#490" class="InductiveConstructor Operator">`∪</a> <a id="775" href="Regular.html#763" class="Bound">g</a>
+
+<a id="_⋆"></a><a id="778" href="Regular.html#778" class="Function Operator">_⋆</a> <a id="781" class="Symbol">:</a> <a id="783" href="Regular.html#405" class="Datatype">Regex</a> <a id="789" class="Symbol">→</a> <a id="791" href="Regular.html#405" class="Datatype">Regex</a>
+<a id="797" href="Regular.html#797" class="Bound">g</a> <a id="799" href="Regular.html#778" class="Function Operator">⋆</a> <a id="801" class="Symbol">=</a> <a id="803" class="Symbol">(</a><a id="804" href="Regular.html#797" class="Bound">g</a> <a id="806" href="Regular.html#553" class="InductiveConstructor Operator">⁺</a><a id="807" class="Symbol">)</a> <a id="809" href="Regular.html#744" class="Function Operator">⁇</a>
+
+<a id="812" class="Comment">{-
+_⁺ : Regex → Regex
+g ⁺ = g ∙ (g ⋆)
+-}</a>
+
+<a id="854" class="Keyword">infixr</a> <a id="861" class="Number">8</a> <a id="863" href="Regular.html#522" class="InductiveConstructor Operator">_∙_</a>
+<a id="867" class="Keyword">infixr</a> <a id="874" class="Number">7</a> <a id="876" href="Regular.html#490" class="InductiveConstructor Operator">_`∪_</a>
+
+<a id="_≺_"></a><a id="882" href="Regular.html#882" class="Function Operator">_≺_</a> <a id="886" class="Symbol">:</a> <a id="888" href="Relation.Binary.Core.html#845" class="Function">Rel</a> <a id="892" href="Language.html#232" class="Function">Word</a> <a id="897" href="Level.html#512" class="Function">0ℓ</a>
+<a id="900" href="Regular.html#882" class="Function Operator">_≺_</a> <a id="904" class="Symbol">=</a> <a id="906" href="Data.Nat.Base.html#1047" class="Function Operator">_&lt;_</a> <a id="910" href="Function.Base.html#3938" class="Function Operator">on</a> <a id="913" href="Data.List.Base.html#4297" class="Function">length</a>
+
+<a id="≺-wf"></a><a id="921" href="Regular.html#921" class="Function">≺-wf</a> <a id="926" class="Symbol">:</a> <a id="928" href="Induction.WellFounded.html#1387" class="Function">WellFounded</a> <a id="940" href="Regular.html#882" class="Function Operator">_≺_</a>
+<a id="944" href="Regular.html#921" class="Function">≺-wf</a> <a id="949" class="Symbol">=</a> <a id="951" href="Induction.WellFounded.html#5057" class="Function">InverseImage.wellFounded</a> <a id="976" href="Data.List.Base.html#4297" class="Function">length</a> <a id="983" href="Data.Nat.Induction.html#2262" class="Function">&lt;-wellFounded</a>
+
+<a id="+-≺"></a><a id="998" href="Regular.html#998" class="Function">+-≺</a> <a id="1002" class="Symbol">:</a> <a id="1004" class="Symbol">∀</a> <a id="1006" class="Symbol">{</a><a id="1007" href="Regular.html#1007" class="Bound">x</a> <a id="1009" href="Regular.html#1009" class="Bound">y</a> <a id="1011" href="Regular.html#1011" class="Bound">z</a><a id="1012" class="Symbol">}</a> <a id="1014" class="Symbol">→</a> <a id="1016" href="Agda.Builtin.Nat.html#223" class="InductiveConstructor">suc</a> <a id="1020" href="Regular.html#1007" class="Bound">x</a> <a id="1022" href="Agda.Builtin.Nat.html#325" class="Primitive Operator">+</a> <a id="1024" href="Regular.html#1009" class="Bound">y</a> <a id="1026" href="Agda.Builtin.Equality.html#151" class="Datatype Operator">≡</a> <a id="1028" href="Regular.html#1011" class="Bound">z</a> <a id="1030" class="Symbol">→</a> <a id="1032" href="Regular.html#1009" class="Bound">y</a> <a id="1034" href="Data.Nat.Base.html#1047" class="Function Operator">&lt;</a> <a id="1036" href="Regular.html#1011" class="Bound">z</a>
+<a id="1038" href="Regular.html#998" class="Function">+-≺</a> <a id="1042" class="Symbol">{</a><a id="1043" href="Regular.html#1043" class="Bound">x</a><a id="1044" class="Symbol">}{</a><a id="1046" href="Regular.html#1046" class="Bound">y</a><a id="1047" class="Symbol">}{</a><a id="1049" href="Regular.html#1049" class="Bound">z</a><a id="1050" class="Symbol">}</a> <a id="1052" href="Agda.Builtin.Equality.html#208" class="InductiveConstructor">refl</a> <a id="1057" class="Symbol">=</a> <a id="1059" href="Data.Nat.Properties.html#8212" class="Function">&lt;-transˡ</a> <a id="1068" class="Symbol">{</a><a id="1069" class="Argument">i</a> <a id="1071" class="Symbol">=</a> <a id="1073" href="Regular.html#1046" class="Bound">y</a><a id="1074" class="Symbol">}</a> <a id="1076" class="Symbol">{</a><a id="1077" class="Argument">j</a> <a id="1079" class="Symbol">=</a> <a id="1081" href="Agda.Builtin.Nat.html#223" class="InductiveConstructor">suc</a> <a id="1085" href="Regular.html#1046" class="Bound">y</a><a id="1086" class="Symbol">}</a> <a id="1088" class="Symbol">{</a><a id="1089" class="Argument">k</a> <a id="1091" class="Symbol">=</a> <a id="1093" href="Agda.Builtin.Nat.html#223" class="InductiveConstructor">suc</a> <a id="1097" href="Regular.html#1043" class="Bound">x</a> <a id="1099" href="Agda.Builtin.Nat.html#325" class="Primitive Operator">+</a> <a id="1101" href="Regular.html#1046" class="Bound">y</a><a id="1102" class="Symbol">}</a> <a id="1104" class="Symbol">(</a><a id="1105" href="Data.Nat.Properties.html#10043" class="Function">n&lt;1+n</a> <a id="1111" href="Regular.html#1046" class="Bound">y</a><a id="1112" class="Symbol">)</a> <a id="1114" class="Symbol">(</a><a id="1115" href="Data.Nat.Base.html#1002" class="InductiveConstructor">s≤s</a> <a id="1119" href="Function.Base.html#1538" class="Function Operator">$</a> <a id="1121" href="Data.Nat.Properties.html#16547" class="Function">m≤n+m</a> <a id="1127" href="Regular.html#1046" class="Bound">y</a> <a id="1129" href="Regular.html#1043" class="Bound">x</a><a id="1130" class="Symbol">)</a>
+
+<a id="1133" class="Keyword">private</a>
+  <a id="1143" class="Keyword">variable</a>
+    <a id="1156" href="Regular.html#1156" class="Generalizable">g</a> <a id="1158" href="Regular.html#1158" class="Generalizable">g′</a> <a id="1161" class="Symbol">:</a> <a id="1163" href="Regular.html#405" class="Datatype">Regex</a>
+
+<a id="1170" class="Keyword">data</a> <a id="Accept"></a><a id="1175" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1182" class="Symbol">:</a> <a id="1184" href="Regular.html#405" class="Datatype">Regex</a> <a id="1190" class="Symbol">→</a> <a id="1192" href="Language.html#232" class="Function">Word</a> <a id="1197" class="Symbol">→</a> <a id="1199" href="Language.html#114" class="Function">Type</a> <a id="1204" class="Keyword">where</a>
+
+  <a id="Accept.[ε]"></a><a id="1213" href="Regular.html#1213" class="InductiveConstructor">[ε]</a>  <a id="1218" class="Symbol">:</a> <a id="1220" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1227" href="Regular.html#440" class="InductiveConstructor">`ε</a> <a id="1230" href="Language.html#364" class="InductiveConstructor">ε</a>
+
+  <a id="Accept.[I]"></a><a id="1235" href="Regular.html#1235" class="InductiveConstructor">[I]</a>  <a id="1240" class="Symbol">:</a> <a id="1242" class="Symbol">∀</a> <a id="1244" class="Symbol">{</a><a id="1245" href="Regular.html#1245" class="Bound">x</a> <a id="1247" href="Regular.html#1247" class="Bound">x∈</a><a id="1249" class="Symbol">}</a> <a id="1251" class="Symbol">→</a> <a id="1253" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1260" class="Symbol">(</a><a id="1261" href="Regular.html#454" class="InductiveConstructor">I</a> <a id="1263" href="Regular.html#1245" class="Bound">x</a> <a id="1265" href="Regular.html#1247" class="Bound">x∈</a><a id="1267" class="Symbol">)</a> <a id="1269" href="Data.List.Base.html#4458" class="Function Operator">[</a> <a id="1271" href="Regular.html#1245" class="Bound">x</a> <a id="1273" href="Data.List.Base.html#4458" class="Function Operator">]</a>
+
+  <a id="Accept.[∪ˡ]"></a><a id="1278" href="Regular.html#1278" class="InductiveConstructor">[∪ˡ]</a> <a id="1283" class="Symbol">:</a> <a id="1285" class="Symbol">∀</a> <a id="1287" class="Symbol">{</a><a id="1288" href="Regular.html#1288" class="Bound">g</a> <a id="1290" href="Regular.html#1290" class="Bound">g′</a> <a id="1293" href="Regular.html#1293" class="Bound">w</a><a id="1294" class="Symbol">}</a> <a id="1296" class="Symbol">→</a> <a id="1298" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1305" href="Regular.html#1288" class="Bound">g</a> <a id="1307" href="Regular.html#1293" class="Bound">w</a> <a id="1309" class="Symbol">→</a> <a id="1311" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1318" class="Symbol">(</a><a id="1319" href="Regular.html#1288" class="Bound">g</a> <a id="1321" href="Regular.html#490" class="InductiveConstructor Operator">`∪</a> <a id="1324" href="Regular.html#1290" class="Bound">g′</a><a id="1326" class="Symbol">)</a> <a id="1328" href="Regular.html#1293" class="Bound">w</a>
+
+  <a id="Accept.[∪ʳ]"></a><a id="1333" href="Regular.html#1333" class="InductiveConstructor">[∪ʳ]</a> <a id="1338" class="Symbol">:</a> <a id="1340" class="Symbol">∀</a> <a id="1342" class="Symbol">{</a><a id="1343" href="Regular.html#1343" class="Bound">g</a> <a id="1345" href="Regular.html#1345" class="Bound">g′</a> <a id="1348" href="Regular.html#1348" class="Bound">w</a><a id="1349" class="Symbol">}</a> <a id="1351" class="Symbol">→</a> <a id="1353" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1360" href="Regular.html#1343" class="Bound">g</a> <a id="1362" href="Regular.html#1348" class="Bound">w</a> <a id="1364" class="Symbol">→</a> <a id="1366" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1373" class="Symbol">(</a><a id="1374" href="Regular.html#1345" class="Bound">g′</a> <a id="1377" href="Regular.html#490" class="InductiveConstructor Operator">`∪</a> <a id="1380" href="Regular.html#1343" class="Bound">g</a><a id="1381" class="Symbol">)</a> <a id="1383" href="Regular.html#1348" class="Bound">w</a>
+
+  <a id="Accept.[∙]"></a><a id="1388" href="Regular.html#1388" class="InductiveConstructor">[∙]</a>  <a id="1393" class="Symbol">:</a> <a id="1395" class="Symbol">∀</a> <a id="1397" class="Symbol">{</a><a id="1398" href="Regular.html#1398" class="Bound">w</a> <a id="1400" href="Regular.html#1400" class="Bound">w′</a> <a id="1403" href="Regular.html#1403" class="Bound">g</a> <a id="1405" href="Regular.html#1405" class="Bound">g′</a><a id="1407" class="Symbol">}</a> <a id="1409" class="Symbol">→</a> <a id="1411" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1418" href="Regular.html#1403" class="Bound">g</a> <a id="1420" href="Regular.html#1398" class="Bound">w</a> <a id="1422" class="Symbol">→</a> <a id="1424" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1431" href="Regular.html#1405" class="Bound">g′</a> <a id="1434" href="Regular.html#1400" class="Bound">w′</a> <a id="1437" class="Symbol">→</a> <a id="1439" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1446" class="Symbol">(</a><a id="1447" href="Regular.html#1403" class="Bound">g</a> <a id="1449" href="Regular.html#522" class="InductiveConstructor Operator">∙</a> <a id="1451" href="Regular.html#1405" class="Bound">g′</a><a id="1453" class="Symbol">)</a> <a id="1455" class="Symbol">(</a><a id="1456" href="Regular.html#1398" class="Bound">w</a> <a id="1458" href="Data.List.Base.html#1763" class="Function Operator">++</a> <a id="1461" href="Regular.html#1400" class="Bound">w′</a><a id="1463" class="Symbol">)</a>
+
+<a id="1466" class="Comment">{-
+  [⋆-base] : Accept (g ⋆) ε
+  [⋆-step] : ∀ {w w′ g} → Accept g w → Accept (g ⋆) w′ → Accept (g ⋆) (w ++ w′)
+-}</a>
+
+  <a id="Accept.[⁺]"></a><a id="1583" href="Regular.html#1583" class="InductiveConstructor">[⁺]</a>  <a id="1588" class="Symbol">:</a> <a id="1590" class="Symbol">∀</a> <a id="1592" class="Symbol">{</a><a id="1593" href="Regular.html#1593" class="Bound">w</a> <a id="1595" href="Regular.html#1595" class="Bound">w′</a> <a id="1598" href="Regular.html#1598" class="Bound">g</a><a id="1599" class="Symbol">}</a> <a id="1601" class="Symbol">→</a> <a id="1603" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1610" href="Regular.html#1598" class="Bound">g</a> <a id="1612" href="Regular.html#1593" class="Bound">w</a> <a id="1614" class="Symbol">→</a> <a id="1616" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1623" class="Symbol">(</a><a id="1624" href="Regular.html#1598" class="Bound">g</a> <a id="1626" href="Regular.html#778" class="Function Operator">⋆</a><a id="1627" class="Symbol">)</a> <a id="1629" href="Regular.html#1595" class="Bound">w′</a> <a id="1632" class="Symbol">→</a> <a id="1634" href="Regular.html#1175" class="Datatype">Accept</a> <a id="1641" class="Symbol">(</a><a id="1642" href="Regular.html#1598" class="Bound">g</a> <a id="1644" href="Regular.html#553" class="InductiveConstructor Operator">⁺</a><a id="1645" class="Symbol">)</a> <a id="1647" class="Symbol">(</a><a id="1648" href="Regular.html#1593" class="Bound">w</a> <a id="1650" href="Data.List.Base.html#1763" class="Function Operator">++</a> <a id="1653" href="Regular.html#1595" class="Bound">w′</a><a id="1655" class="Symbol">)</a>
+
+<a id="_∈ʳ_"></a><a id="1658" href="Regular.html#1658" class="Function Operator">_∈ʳ_</a> <a id="1663" class="Symbol">=</a> <a id="1665" href="Regular.html#1175" class="Datatype">Accept</a>
+
+<a id="1673" class="Keyword">instance</a>
+  <a id="L-Regex"></a><a id="1684" href="Regular.html#1684" class="Function">L-Regex</a> <a id="1692" class="Symbol">:</a> <a id="1694" href="Language.html#410" class="Record">Language</a> <a id="1703" href="Regular.html#405" class="Datatype">Regex</a>
+  <a id="1711" href="Regular.html#1684" class="Function">L-Regex</a> <a id="1719" class="Symbol">.</a><a id="1720" href="Language.html#456" class="Field">accept</a> <a id="1727" class="Symbol">=</a> <a id="1729" href="Regular.html#1175" class="Datatype">Accept</a>
+  <a id="1738" class="Comment">{- g w = go g _ (≺-wf w)
+   where
+    go : Regex → (w : Word) → Acc _≺_ w → Type
+    go g w a₀@(acc a)
+      with g
+    ... | `∅       = ⊥
+    ... | `ε       = w ≡ ε
+    ... | I x _    = w ≡ [ x ]
+    ... | g₁ `∪ g₂ = go g₁ w a₀ ⊎ go g₂ w a₀
+    ... | g₁ ∙ g₂  = Σ[ i ∈ Fin (suc $ length w) ]
+          let wˡ , wʳ = splitAt w i
+          in go g₁ wˡ (≺-wf wˡ) × go g₂ wʳ (≺-wf wʳ)
+    ... | g′ ⁺     = Σ[ i ∈ Index w ]
+          let wˡ⁺ , wʳ , p = splitAt⁺ʳ w i
+              wˡ = L.NE.toList wˡ⁺
+          in  go g′ wˡ (≺-wf wˡ) ×
+              ( go `ε wʳ (a _ (+-≺ p))
+              ⊎ go (g′ ⁺) wʳ (a _ (+-≺ p)) ) -}</a>
+
+              <a id="2373" class="Comment">-- go (`ε `∪ (g′ ⁺)) wʳ (a _ (+-≺ p))</a>
+              <a id="2425" class="Comment">-- go (g′ ⋆) wʳ (a _ (+-≺ p))</a>
+            <a id="2467" class="Comment">-- NB: Agda fails termination checking if we do not inline _`∪_</a>
+
+<a id="2532" class="Comment">{- _ : Decidable _∈ʳ_
+-}</a>
+</pre></body></html>
