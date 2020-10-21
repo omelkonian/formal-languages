@@ -29,11 +29,11 @@ module Regex-Example where
                            ([∪ʳ] ([⁺] ([∪ʳ] ([∙] [I] ([∙] ([∪ˡ] [ε]) [I])))
                                       ([∪ʳ] ([⁺] ([∪ˡ] [I]) ([∪ˡ] [ε]))))))))
 
-module FSA-Example where
+module DFA-Example where
   open import Regular (singleton 'a')
-  open import FSA     (singleton 'a')
+  open import DFA     (singleton 'a')
 
-  α⋆ : FSA ℕ
+  α⋆ : DFA ℕ
   Q  α⋆ = singleton 1
   δ  α⋆ = λ{ 1 'a' → just 1
           ; _ _   → nothing }

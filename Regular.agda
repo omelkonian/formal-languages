@@ -30,11 +30,11 @@ data Regex : Type where
 
   {- _⋆ : Regex → Regex -}
 
-⋃_ : List Regex → Regex
-⋃_ = foldr _`∪_ `∅
+`⋃_ : List Regex → Regex
+`⋃_ = foldr _`∪_ `∅
 
 ∀Σ : Regex
-∀Σ = ⋃ mapWith∈ (list Σ) (I _)
+∀Σ = `⋃ mapWith∈ (list Σ) (I _)
 
 len : ℕ → Regex
 len 0 = `ε

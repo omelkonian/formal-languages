@@ -12,13 +12,13 @@ open import Prelude.Functor
 open import Prelude.Bifunctor
 open import Prelude.Set'
 
-module FSA (Σ : Alphabet) where
+module DFA (Σ : Alphabet) where
 
 view-mid : List⁺ A → (A × List A × A)
 view-mid xs⁺@(h ∷ _) with snocView xs⁺
 ... | xs ∷ʳ′ l = h , drop 1 xs , l
 
-record FSA (S : Type) {{_ : DecEq S}} : Type where
+record DFA (S : Type) {{_ : DecEq S}} : Type where
   field
     Q  : Set⟨ S ⟩
     -- Σ  : Alphabet
@@ -33,7 +33,7 @@ record FSA (S : Type) {{_ : DecEq S}} : Type where
 
   Δ : S → Word → Maybe (List⁺ S)
   Δ s ε       = just (s ∷ [])
-  Δ s (t ∷ w) with δ s t
+  Δ s (α ∷ w) with δ s α
   ... | nothing = nothing
   ... | just s′ = s ∷⁺_ <$> Δ s′ w
 
@@ -50,54 +50,52 @@ record FSA (S : Type) {{_ : DecEq S}} : Type where
   isFinal : S → Type
   isFinal = _∈′ fs
 
-open FSA public
+open DFA public
 
--- pattern Δ[_,_]∈_ = λ fsa i Q → Δ′ fsa Q i
-
--- Example FSA
--- _ : FSA 0|1
+-- Example DFA
+-- _ : DFA 0|1
 -- _ = ?
 
-∁ : ∀ {S} {{_ : DecEq S}} → FSA S → FSA S
+∁ : ∀ {S} {{_ : DecEq S}} → DFA S → DFA S
 ∁ record {Q = Q; δ = δ; Q₀ = Q₀; F = (F , F⊆)} =
   record {Q = Q; δ = δ; Q₀ = Q₀; F = (Q ─ F , ∈-─ {xs = Q} {ys = F})}
 
 {-
-data Accept : FSA S → Word → Type where
-  [δ] : ∀ {w s fsa} → δ̂ fsa w ≡ just s → s ∈′ fs fsa → Accept fsa w
+data Accept : DFA S → Word → Type where
+  [δ] : ∀ {w s dfa} → δ̂ dfa w ≡ just s → s ∈′ fs dfa → Accept dfa w
 -}
 
 instance
-  L-FSA : ∀ {S} {{_ : DecEq S}} → Language (FSA S)
-  L-FSA .accept fsa w = ∃ λ s → (δ̂ fsa w ≡ just s) × (isFinal fsa s)
+  L-DFA : ∀ {S} {{_ : DecEq S}} → Language (DFA S)
+  L-DFA .accept dfa w = ∃ λ s → (δ̂ dfa w ≡ just s) × (isFinal dfa s)
 
 -- To/from Regex
 open import Regular Σ
 
 -- Regex properties
-⋃-intro : ∀ {w rs r} → r ∈ rs → accept r w → accept (⋃ rs) w
+⋃-intro : ∀ {w rs r} → r ∈ rs → accept r w → accept (`⋃ rs) w
 ⋃-intro = {!!}
 
-⋃-elim : ∀ {w rs} → accept (⋃ rs) w → ∃ λ r → (r ∈ rs) × (accept r w)
+⋃-elim : ∀ {w rs} → accept (`⋃ rs) w → ∃ λ r → (r ∈ rs) × (accept r w)
 ⋃-elim = {!!}
 
 
-DFA⇒Regex : ∀ {S} {{_ : DecEq S}} → (fsa : FSA S) → Σ[ r ∈ Regex ] (fsa ~ r)
--- fsa → ∃ r. fsa ~ r
-DFA⇒Regex {S = S} fsa@(record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , _ ; F = ⟨ F ⟩∶- _ , _ }) =
-  r , fsa~r
+DFA⇒Regex : ∀ {S} {{_ : DecEq S}} → (dfa : DFA S) → Σ[ r ∈ Regex ] (dfa ~ r)
+-- dfa → ∃ r. dfa ~ r
+DFA⇒Regex {S = S} dfa@(record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , _ ; F = ⟨ F ⟩∶- _ , _ }) =
+  r , dfa~r
   where
-    p : ∀ {f} → f ∈ F → (w : Word) → Δᵢⱼᵏ fsa Q Q₀ f w ≡ accept fsa w
+    p : ∀ {f} → f ∈ F → (w : Word) → Δᵢⱼᵏ dfa Q Q₀ f w ≡ accept dfa w
     p = {!!}
 
-    -- R _ i j ~ (fsa // i↝j)
+    -- R _ i j ~ (dfa // i↝j)
     -- R _ i j ~ δ̂
     R : List S → S → S → Regex
     -- Rᵢⱼ⁰
     -- ^ k = 0 (all states > 1)
     R [] i j
       = let αs  = filter (λ α → δ i α ≟ just j) (list Σ)
-            Rᵢⱼ = ⋃ mapWith∈ αs (I _ ∘ proj₁ ∘ ∈-filter⁻ _)
+            Rᵢⱼ = `⋃ mapWith∈ αs (I _ ∘ proj₁ ∘ ∈-filter⁻ _)
         in (if i == j then `ε else `∅) `∪ Rᵢⱼ
     -- Rᵢⱼᵏ = Rᵢⱼᵏ⁻¹ ∪ (Rᵢₖᵏ⁻¹ ∙ Rₖₖᵏ⁻¹ ⋆ ∙ Rₖⱼᵏ⁻¹)
     -- ^ (reverse Q ‼ k:ℕ) = k:S
@@ -105,18 +103,18 @@ DFA⇒Regex {S = S} fsa@(record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , 
       R q i j `∪ (R q i k ∙ R q k k ⋆ ∙ R q k j)
 
     R≡ : (Q : List S) → (i : S) → (j : S)
-       → Δᵢⱼᵏ fsa Q i j ⇔ accept (R Q i j)
+       → Δᵢⱼᵏ dfa Q i j ⇔ accept (R Q i j)
     R≡ [] i j w = l , r
       where
-        l : Δᵢⱼᵏ fsa [] i j w → accept (R [] i j) w
-        l p with Δ fsa i w | p
+        l : Δᵢⱼᵏ dfa [] i j w → accept (R [] i j) w
+        l p with Δ dfa i w | p
         ... | nothing | ()
         ... | just l  | M.Any.Any.just (h≡i , m⊆[] , l≡j)
             -- m⊆[] ⇒ m ≡ [] ⇒ (l≡[] | l≡[α])
             --                [∪ˡ] ε | [∪ʳ] ... (⁇ δ i α ≡ just j ⁇)
             = {!!}
 
-        r : accept (R [] i j) w → Δᵢⱼᵏ fsa [] i j w
+        r : accept (R [] i j) w → Δᵢⱼᵏ dfa [] i j w
         r = {!!}
 
 
@@ -125,26 +123,26 @@ DFA⇒Regex {S = S} fsa@(record { Q = ⟨ Q ⟩∶- _ ; δ = δ ; Q₀ = Q₀ , 
 {-
 
 ** base **
-Δ′ fsa [] i j ⇔ accept ((ε|∅) ∪ a₀ ∪ a₁ ∪ ⋯)
+Δ′ dfa [] i j ⇔ accept ((ε|∅) ∪ a₀ ∪ a₁ ∪ ⋯)
 
 l = []
 l = [ i ]
 l = [ i , j ]
 
-Δ′ fsa [] i j → accept ((ε|∅) ∪ a₀ ∪ a₁ ∪ ⋯)
+Δ′ dfa [] i j → accept ((ε|∅) ∪ a₀ ∪ a₁ ∪ ⋯)
 
-Δ′ fsa [] i j ← accept ((ε|∅) ∪ a₀ ∪ a₁ ∪ ⋯)
+Δ′ dfa [] i j ← accept ((ε|∅) ∪ a₀ ∪ a₁ ∪ ⋯)
 
   1) i ≡ j
 
-  Δ′ fsa [] i ⇔ accept (ε ∪ Rᵢⱼ)
+  Δ′ dfa [] i ⇔ accept (ε ∪ Rᵢⱼ)
 
   2) i ≢ j
 
-  Δ′ fsa [] i ⇔ accept (∅ ∪ Rᵢⱼ)
+  Δ′ dfa [] i ⇔ accept (∅ ∪ Rᵢⱼ)
 
 ** step **
-Δ′ fsa (k ∷ q) i j ⇔ accept (R q i j ∪ (R q i k ∙ R q k k ⋆ ∙ R q k j))
+Δ′ dfa (k ∷ q) i j ⇔ accept (R q i j ∪ (R q i k ∙ R q k k ⋆ ∙ R q k j))
                    ≈ accept R q i j  ⊎ accept (R q i k ∙ R q k k ⋆ ∙ R q k j))
                    ≈ accept R q i j  ⊎ (accept R q i k ... accept R Q k k ... accept R q k j)
 
@@ -218,31 +216,31 @@ _⋆ : Δ′ Q x x w
 
 -}
 
-    R-δ̂ : ∀ {f} → f ∈ F → accept fsa ⇔ accept (R Q Q₀ f)
+    R-δ̂ : ∀ {f} → f ∈ F → accept dfa ⇔ accept (R Q Q₀ f)
     R-δ̂ {f} f∈ w rewrite sym (p f∈ w) = R≡ Q Q₀ f w
 
     r : Regex
-    r = ⋃ (R Q Q₀ <$> F)
+    r = `⋃ (R Q Q₀ <$> F)
 
-    fsa~r : fsa ~ r
-    fsa~r w = p₁ , p₂
+    dfa~r : dfa ~ r
+    dfa~r w = p₁ , p₂
       where
-        p₁ : accept fsa w → accept r w
+        p₁ : accept dfa w → accept r w
         p₁ w∈@(_ , _ , f∈) = ⋃-intro (∈-map⁺ (R Q Q₀) f∈) ((proj₁ $ R-δ̂ f∈ w) w∈)
 
-        p₂ : accept r w → accept fsa w
+        p₂ : accept r w → accept dfa w
         p₂ w∈rs = let r , r∈ , w∈r = ⋃-elim w∈rs
                       f , f∈ , r≡  = ∈-map⁻ (R Q Q₀) r∈
                   in  (proj₂ $ R-δ̂ {f = f} f∈ w) (subst (flip accept w) r≡ w∈r)
 
--- _ : proj₁ (DFA⇒Regex fsa)
+-- _ : proj₁ (DFA⇒Regex dfa)
 
 
--- DFA⇒Regex′ : ∀ {S} {{_ : DecEq S}} → (fsa : FSA S) → (fsa ~ DFA⇒Regex fsa)
--- DFA⇒Regex′ fsa = {!!}
+-- DFA⇒Regex′ : ∀ {S} {{_ : DecEq S}} → (dfa : DFA S) → (dfa ~ DFA⇒Regex dfa)
+-- DFA⇒Regex′ dfa = {!!}
 
 
--- Regex⇒DFA : Regex → FSA
+-- Regex⇒DFA : Regex → DFA
 {-
   ⋃ concatMap (λ f → map (R (q₀ , f)) (enumerate q)) (list fs)
   -- T0D0: find out a recursion principle on lists along with their (relative) indices
